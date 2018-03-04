@@ -14,6 +14,7 @@ screen_rect = screen.get_rect()
 pygame.display.set_caption('Type X')
 
 
+
 class Ship():
     '''a class to manage the contents and settings of the ship'''
     
@@ -67,7 +68,39 @@ class Ship():
             
     def blitme(self):
         screen.blit(self.img, self.rect) 
- 
+
+class Laser(Sprite):
+    '''a class to store laser properties and functions'''
+    
+    def __init__(self, screen, ship):
+        super().__init__()
+        self.screen = screen
+        self.ship = ship
+        
+        self.img = pygame.image.load('images/blaster.png')
+        self.img = pygame.transform.scale(self.img, (90, 18))
+        self.rect = self.img.get_rect()
+        
+        self.rect.centery = ship.rect.centery
+        self.rect.left = ship.rect.right
+        
+        #laser speed settings
+        self.speed = 10
+        
+        #store the bullet's position as a decimal value
+        self.x = float(self.rect.x)
+        
+    def update(self):
+        '''move the bullets across the screen'''
+        #update the decimal position of the bullet
+        self.x += self.speed
+        #update rect position
+        self.rect.x = self.x
+    
+    def draw_laser(self):
+        '''draw the bullet to the screen'''
+        self.screen.blit(self.img, self.rect)
+
 class Background():
     '''a class to manage the backgroud of the game and contain the scrolling function''' 
 
@@ -98,16 +131,16 @@ class Background():
         screen.blit(self.bg, self.bg_rect)
         screen.blit(self.bg2, self.bg2_rect)
 
-def check_events(ship):
+def check_events(ship, screen, lasers):
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             sys.exit()
         elif event.type == pygame.KEYDOWN:
-            check_keydown_events(ship, event)
+            check_keydown_events(ship, screen, lasers, event)
         elif event.type == pygame.KEYUP:
-            check_keyup_events(ship, event)
+            check_keyup_events(ship, screen, lasers, event)
 
-def check_keydown_events(ship, event):
+def check_keydown_events(ship, screen, lasers, event):
     if event.key == pygame.K_q:
         sys.exit()
     if event.key == pygame.K_LEFT:
@@ -118,8 +151,11 @@ def check_keydown_events(ship, event):
         ship.moving_up = True
     if event.key == pygame.K_DOWN:
         ship.moving_down = True
+    if event.key == pygame.K_SPACE:
+        new_laser = Laser(screen, ship)
+        lasers.add(new_laser)
 
-def check_keyup_events(ship, event):
+def check_keyup_events(ship, screen, lasers, event):
     if event.key == pygame.K_LEFT:
         ship.moving_left = False
     if event.key == pygame.K_RIGHT:
@@ -129,22 +165,30 @@ def check_keyup_events(ship, event):
     if event.key == pygame.K_DOWN:
         ship.moving_down = False    
 
-
+def update_lasers(lasers, screen_rect):
+    lasers.update()
+    for laser in lasers.sprites():
+        if laser.rect.left > screen_rect.right:
+            lasers.remove(laser)
 
 def run_game():   
     #start the main loop of the game
     ship = Ship()
     bg = Background()
+    lasers = Group()
     
     while True:
-        check_events(ship)
+        check_events(ship, screen, lasers)
         
         bg.update()
         ship.update()
+        update_lasers(lasers, screen_rect)
         
         #draw the screen and ships/etc.
         bg.blitme()
         ship.blitme()
+        for laser in lasers.sprites():
+            laser.draw_laser()
         
         pygame.display.flip()
 
