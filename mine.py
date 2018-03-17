@@ -6,17 +6,20 @@ from random import randint
 class Mine(Sprite):
 	'''a class to store mines'''
 	
-	def __init__(self, screen):
+	def __init__(self, screen, x, y):
 		super().__init__()
 		self.screen = screen
 		self.screen_rect = self.screen.get_rect()
 		
 		self.image = pygame.image.load('images/mine.png')
+		
+		#ADD DAMAGED IMAGES HERE
+		
 		self.image = pygame.transform.scale(self.image, (50, 50))
 		self.rect = self.image.get_rect()
-		self.hp = 3
-		self.rect.centerx = 1500
-		self.rect.centery = randint(100, 700)
+		self.hp = 10
+		self.rect.centerx = x
+		self.rect.centery = y
 		self.speedx = 1
 	
 	def update(self):
@@ -28,6 +31,7 @@ class Mine(Sprite):
 	
 	def damage(self, damage):
 		self.hp -= damage
+		#ADD DAMAGE FUNCTION CHECK HERE TO UPDATE IMAGE
 
 	def blitme(self):
 		self.screen.blit(self.image, self.rect)

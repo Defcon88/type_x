@@ -6,6 +6,7 @@ import math
 import time
 from mine import Mine
 from fighter import Fighter
+from explosion import Explosion
 
 # KEYBOARD FUNCTIONS
 
@@ -45,7 +46,7 @@ def check_keyup_events(ship, screen, lasers, event):
 
 #LASER FUNCTIONS
 
-def update_lasers(lasers, screen_rect, fighters, mines):
+def update_lasers(lasers, screen_rect, fighters, mines, explosions):
     lasers.update()
     check_laser_collisions(lasers, fighters, mines)
     for laser in lasers.sprites():
@@ -62,22 +63,24 @@ def check_laser_collisions(lasers, fighters, mines):
 		if pygame.sprite.spritecollideany(mine, lasers):
 			mine.damage(1)
 	collisions = pygame.sprite.groupcollide(lasers, mines, True, False)
-
+ 
 
 # SHIP FUNCTIONS
 
 def check_hp(ship, settings):
-	if ship.hp == 0:
+	if ship.hp <= 0:
 		settings.game_active = False 
 
 
 #FIGHTER FUNCTIONS
 
-def update_fighters(fighters, ship, screen_rect):
+def update_fighters(fighters, ship, screen_rect, explosions):
 	fighters.update()
 	check_fighter_collisions(fighters, ship)
 	for fighter in fighters.sprites():
 		if fighter.hp == 0:
+			explode = Explosion(fighter.rect.center)
+			explosions.add(explode)
 			fighters.remove(fighter)
 		if fighter.rect.right < 0 or fighter.rect.bottom < 0 or fighter.rect.top > screen_rect.bottom:
 			fighter.reset()
@@ -90,15 +93,28 @@ def check_fighter_collisions(fighters, ship):
 
 #MINE FUNCTIONS
 
-def update_mines(mines, screen_rect, ship):
+def update_mines(mines, screen_rect, ship, explosions):
 	check_movement(mines, ship)
 	check_mines_collisions(mines, ship)
 	for mine in mines.sprites():
-		if mine.hp == 0:
+		if mine.hp <= 0:
+			detonate(mines, mine, ship)
+			s_distance = check_distance(ship,mine)
+			if s_distance < 100:
+				ship.damage(1)
+			explode = Explosion(mine.rect.center)
+			explosions.add(explode)
 			mines.remove(mine)
 		if mine.rect.right < 0:
-			mine.reset()
+			mines.remove(mine)
 
+def detonate(mines, mine, ship):
+	for m in mines:
+		m_distance = check_distance(m, mine)
+		if m_distance < 100:
+			m.hp = 0
+		
+		
 def check_movement(mines, ship):
 	for mine in mines.sprites():
 		dist = check_distance(mine, ship)
@@ -112,7 +128,6 @@ def check_distance(mine, ship):
 	p2 = [ship.rect.centerx, ship.rect.centery]
 	distance = math.sqrt(((p1[0]-p2[0])**2) + ((p1[1]-p2[1])**2) )
 	return distance
-
 
 def attract(mine, ship):
 	x_update(mine, ship)
@@ -134,11 +149,11 @@ def check_mines_collisions(mines, ship):
 	for mine in mines.sprites():
 		if pygame.sprite.collide_rect(mine, ship):
 			ship.damage(1)
-			mines.remove(mine)		
+			mine.hp=0		
 
 #SCREEN UPDATES
 
-def update_screen(bg, ship, fighters, mines, lasers):
+def update_screen(bg, ship, fighters, mines, lasers, explosions, screen):
 	bg.blitme()
 	ship.blitme()
 		
@@ -150,7 +165,8 @@ def update_screen(bg, ship, fighters, mines, lasers):
 		
 	for laser in lasers.sprites():
 		laser.draw_laser()
-
+	
+	explosions.draw(screen)
 
 #SPAWNING MOB SETTINGS
 
@@ -164,7 +180,28 @@ def make_mob(fighters, mines, settings, screen):
 				new_fighter = Fighter(screen)
 				fighters.add(new_fighter)
 			if spawn == 2:
-				new_mine = Mine(screen)
-				mines.add(new_mine)
+				spawn_mines(mines, screen)
 			settings.last_time = current_time
+
+def spawn_mines(mines, screen):
+	y = randint(100, 700)
+	new_y = y
+	x = 1500
+	new_mine = Mine(screen, x, y)
+	mines.add(new_mine)
+	
+	for numbers in range(0,4):
+		new_y+=50
+		new_mine = Mine(screen, x, new_y)
+		mines.add(new_mine)
+		if new_y > 1400 or new_y < 0:
+			new_y = y
+			x+=100
+		
 			
+	
+	
+	
+	
+
+

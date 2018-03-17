@@ -35,7 +35,7 @@ class Ship(Sprite):
 		self.hp = 5
 		
 	def update(self, settings):
-		if self.moving_right and self.rect.right < (self.screen_rect.right / 2):
+		if self.moving_right and self.rect.right < ((self.screen_rect.right /4)*3):
 			self.center_x += self.x_speed
 		if self.moving_left and self.rect.left > 0:
 			self.center_x -= self.x_speed

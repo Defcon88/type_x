@@ -5,6 +5,11 @@ from pygame.sprite import Group
 from ship import Ship
 from background import Background
 from typex_settings import Settings
+import time
+from explosion import Explosion
+
+
+clock = pygame.time.Clock()
 
 #initialize pygame
 pygame.init()
@@ -22,19 +27,22 @@ def run_game():
 	fighters = Group()
 	mines = Group()
 	settings = Settings()
+	explosions = Group()
 	
 	while settings.game_active == True:
 		gf.check_events(ship, screen, lasers)
 		ship.update(settings)		
-		gf.update_fighters(fighters, ship, screen_rect)
-		gf.update_mines(mines, screen_rect, ship)
-		gf.update_lasers(lasers, screen_rect, fighters, mines)
+		gf.update_fighters(fighters, ship, screen_rect, explosions)
+		gf.update_mines(mines, screen_rect, ship, explosions)
+		gf.update_lasers(lasers, screen_rect, fighters, mines, explosions)
+		explosions.update()
 		bg.update()
 		
 		#draw the screen and ships/etc.
-		gf.update_screen(bg, ship, fighters,  mines, lasers)
+		gf.update_screen(bg, ship, fighters,  mines, lasers, explosions, screen)
 		pygame.display.flip()
 		gf.make_mob(fighters, mines, settings, screen)
+		clock.tick(60) 
 		
 run_game()
 
